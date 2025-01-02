@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Daily Thoughts</title>
+  <title>Fluxo</title>
   <style>
     /* Minimalist styling */
     body {
@@ -40,7 +40,7 @@
   </style>
 </head>
 <body>
-  <h1>Daily Thoughts</h1>
+  <h1>Fluxo</h1>
   <div id="posts"></div>
 
   <script>
@@ -69,16 +69,19 @@
               throw new Error(`Failed to fetch ${filename}`);
             }
             const postData = await postResponse.json();
-            return postData[0]; // Each file contains an array with one post
+            return postData; // Return the entire array of posts
           })
         );
 
+        // Flatten the array of arrays into a single array of posts
+        const allPosts = posts.flat();
+
         // Sort posts by date (newest first)
-        posts.sort((a, b) => parseDate(b.date) - parseDate(a.date));
+        allPosts.sort((a, b) => parseDate(b.date) - parseDate(a.date));
 
         // Display posts
         const postsContainer = document.getElementById('posts');
-        posts.forEach((post) => {
+        allPosts.forEach((post) => {
           const postDiv = document.createElement('div');
           postDiv.className = 'post';
 

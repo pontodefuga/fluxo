@@ -1,12 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Daily Thoughts</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <title>Daily Thoughts</title>
+  <style>
+    /* Minimalist styling */
+    body { font-family: Arial, sans-serif; }
+    #posts { margin: 20px; }
+    .post { border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }
+    .date { color: #666; }
+  </style>
+</head>
+<body>
+  <h1>Daily Thoughts</h1>
+  <div id="posts"></div>
+  <script>
+    // JavaScript to fetch and display posts
+    fetch('/posts/index.json')
+      .then(response => response.json())
+      .then(data => {
+        const postsContainer = document.getElementById('posts');
+        const posts = [];
+        data.files.forEach(filename => {
+          fetch(`/posts/${filename}`)
+            .then(response => response.json())
+            .then(postData => {
+              posts.push(postData[0]);
+              if (posts.length === data.files.length) {
+                // All posts fetched, sort and display
+                posts.sort((a, b) => parseDate(b.date) - parseDate(a.date));
+                posts.forEach(post => {
+                  const postDiv = document.createElement('div');
+                  postDiv.className = 'post';
+                  const dateDiv = document.createElement('div');
+                  dateDiv.className = 'date';
+                  dateDiv.textContent = post.date;
+                  const contentDiv = document.createElement('div');
+                  contentDiv.innerHTML = post.content;
+                  postDiv.appendChild(dateDiv);
+                  postDiv.appendChild(contentDiv);
+                  postsContainer.appendChild(postDiv);
+                });
+              }
+            });
+        });
+      });
+
+    function parseDate(dateString) {
+      // Parses date string to Date object
+      let parts = dateString.split(' ');
+      let dateStr = parts[1] + ' ' + parts[2] + ' ' + parts[3] + ' ' + parts[4];
+      return new Date(dateStr);
+    }
+  </script>
+</body>
 </html>

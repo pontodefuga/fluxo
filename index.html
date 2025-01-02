@@ -2,56 +2,105 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Daily Thoughts</title>
   <style>
     /* Minimalist styling */
-    body { font-family: Arial, sans-serif; }
-    #posts { margin: 20px; }
-    .post { border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }
-    .date { color: #666; }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #444;
+    }
+    #posts {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .post {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .date {
+      color: #777;
+      font-size: 0.9em;
+      margin-bottom: 10px;
+    }
+    .content {
+      line-height: 1.6;
+    }
   </style>
 </head>
 <body>
   <h1>Daily Thoughts</h1>
   <div id="posts"></div>
-  <script>
-    // JavaScript to fetch and display posts
-    fetch('/posts/index.json')
-      .then(response => response.json())
-      .then(data => {
-        const postsContainer = document.getElementById('posts');
-        const posts = [];
-        data.files.forEach(filename => {
-          fetch(`/posts/${filename}`)
-            .then(response => response.json())
-            .then(postData => {
-              posts.push(postData[0]);
-              if (posts.length === data.files.length) {
-                // All posts fetched, sort and display
-                posts.sort((a, b) => parseDate(b.date) - parseDate(a.date));
-                posts.forEach(post => {
-                  const postDiv = document.createElement('div');
-                  postDiv.className = 'post';
-                  const dateDiv = document.createElement('div');
-                  dateDiv.className = 'date';
-                  dateDiv.textContent = post.date;
-                  const contentDiv = document.createElement('div');
-                  contentDiv.innerHTML = post.content;
-                  postDiv.appendChild(dateDiv);
-                  postDiv.appendChild(contentDiv);
-                  postsContainer.appendChild(postDiv);
-                });
-              }
-            });
-        });
-      });
 
+  <script>
+    // Function to parse date strings
     function parseDate(dateString) {
-      // Parses date string to Date object
-      let parts = dateString.split(' ');
-      let dateStr = parts[1] + ' ' + parts[2] + ' ' + parts[3] + ' ' + parts[4];
+      const parts = dateString.split(' ');
+      const dateStr = `${parts[1]} ${parts[2]} ${parts[3]} ${parts[4]}`;
       return new Date(dateStr);
     }
+
+    // Fetch and display posts
+    async function loadPosts() {
+      try {
+        // Fetch the list of post files
+        const response = await fetch('/fluxo/posts/index.json');
+        if (!response.ok) {
+          throw new Error('Failed to fetch index.json');
+        }
+        const data = await response.json();
+
+        // Fetch and process each post file
+        const posts = await Promise.all(
+          data.files.map(async (filename) => {
+            const postResponse = await fetch(`/fluxo/posts/${filename}`);
+            if (!postResponse.ok) {
+              throw new Error(`Failed to fetch ${filename}`);
+            }
+            const postData = await postResponse.json();
+            return postData[0]; // Each file contains an array with one post
+          })
+        );
+
+        // Sort posts by date (newest first)
+        posts.sort((a, b) => parseDate(b.date) - parseDate(a.date));
+
+        // Display posts
+        const postsContainer = document.getElementById('posts');
+        posts.forEach((post) => {
+          const postDiv = document.createElement('div');
+          postDiv.className = 'post';
+
+          const dateDiv = document.createElement('div');
+          dateDiv.className = 'date';
+          dateDiv.textContent = post.date;
+
+          const contentDiv = document.createElement('div');
+          contentDiv.className = 'content';
+          contentDiv.innerHTML = post.content; // Render HTML content directly
+
+          postDiv.appendChild(dateDiv);
+          postDiv.appendChild(contentDiv);
+          postsContainer.appendChild(postDiv);
+        });
+      } catch (error) {
+        console.error('Error loading posts:', error);
+      }
+    }
+
+    // Load posts when the page loads
+    loadPosts();
   </script>
 </body>
 </html>

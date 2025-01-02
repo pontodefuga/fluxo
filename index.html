@@ -5,79 +5,111 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fluxo</title>
   <style>
-    /* Minimalist styling */
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f9f9f9;
-      color: #333;
+    /* Minimalist Reset */
+    * {
       margin: 0;
-      padding: 20px;
+      padding: 0;
+      box-sizing: border-box;
     }
+
+    /* Base Styles */
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #fafafa;
+      color: #333;
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+
     h1 {
       text-align: center;
-      color: #444;
+      color: #222;
+      margin-bottom: 40px;
+      font-size: 2.5rem;
+      font-weight: 600;
     }
+
     #posts {
       max-width: 800px;
       margin: 0 auto;
     }
+
     .post {
       background-color: #fff;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
+
+    .post:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+
     .date {
-      color: #777;
+      color: #666;
       font-size: 0.9em;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
+      font-weight: 500;
     }
+
     .content {
-      line-height: 1.6;
+      font-size: 1em;
+      color: #444;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 600px) {
+      body {
+        padding: 20px 10px;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .post {
+        padding: 16px;
+      }
     }
   </style>
+  <!-- Optional: Add Inter font from Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
   <h1>Fluxo</h1>
   <div id="posts"></div>
 
   <script>
-    // Function to parse date strings
-    function parseDate(dateString) {
+    // Utility function to parse date strings
+    const parseDate = (dateString) => {
       const parts = dateString.split(' ');
       const dateStr = `${parts[1]} ${parts[2]} ${parts[3]} ${parts[4]}`;
       return new Date(dateStr);
-    }
+    };
 
     // Fetch and display posts
-    async function loadPosts() {
+    const loadPosts = async () => {
       try {
         // Fetch the list of post files
         const response = await fetch('/fluxo/posts/index.json');
-        if (!response.ok) {
-          throw new Error('Failed to fetch index.json');
-        }
+        if (!response.ok) throw new Error('Failed to fetch index.json');
         const data = await response.json();
 
         // Fetch and process each post file
         const posts = await Promise.all(
           data.files.map(async (filename) => {
             const postResponse = await fetch(`/fluxo/posts/${filename}`);
-            if (!postResponse.ok) {
-              throw new Error(`Failed to fetch ${filename}`);
-            }
-            const postData = await postResponse.json();
-            return postData; // Return the entire array of posts
+            if (!postResponse.ok) throw new Error(`Failed to fetch ${filename}`);
+            return await postResponse.json();
           })
         );
 
-        // Flatten the array of arrays into a single array of posts
-        const allPosts = posts.flat();
-
-        // Sort posts by date (newest first)
-        allPosts.sort((a, b) => parseDate(b.date) - parseDate(a.date));
+        // Flatten and sort posts by date (newest first)
+        const allPosts = posts.flat().sort((a, b) => parseDate(b.date) - parseDate(a.date));
 
         // Display posts
         const postsContainer = document.getElementById('posts');
@@ -100,7 +132,7 @@
       } catch (error) {
         console.error('Error loading posts:', error);
       }
-    }
+    };
 
     // Load posts when the page loads
     loadPosts();
